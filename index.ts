@@ -1,6 +1,7 @@
-const express =require("express");
-const cors = require("cors")
-const swaggerUi = require("swagger-ui-express");
+import * as express from "express";
+import * as cors from "cors";
+
+const routes = require('./routes')
 
 const {connectionDB} = require("./src/database/connetions.database");
 
@@ -8,12 +9,9 @@ const app = express();
 // const swaggerDocument = require("./swagger.json");
 
 app.use(express.json());
+app.use('/api', routes);
 
 app.use(express.urlencoded({ extended: true }));
-
-app.get("/", (req, res) => {
-    res.json({ message: "Welcome to Mock-Shop-API application." });
-});
 app.use(cors());
 
 app.listen(process.env.PORT || 3000, ()=>{
