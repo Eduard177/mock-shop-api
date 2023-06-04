@@ -1,4 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
+const {OrderStatus} = require("../utils/enum/order_status.enum");
 const orderSchema = new mongoose.Schema({
     productList: {
         type: [
@@ -41,6 +43,14 @@ const orderSchema = new mongoose.Schema({
         ],
         required: true
     },
+    subTotal: {
+        type: Number,
+        required: true
+    },
+    interest: {
+        type: Number,
+        required: true
+    },
     totalValue: {
         type: Number,
         required: true
@@ -51,7 +61,7 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: 'pending'
+        default: OrderStatus.ACTIVE
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,

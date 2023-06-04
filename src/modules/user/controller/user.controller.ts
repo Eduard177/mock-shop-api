@@ -1,18 +1,21 @@
-const express = require('express');
+import {UserDto} from "../dto/user.dto";
+
+require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/user.model');
 const RegistrationError = require('../Errors/registration.error')
-const DatabaseError = require('../Errors/database.error')
 const AuthenticationError = require('../Errors/authentication.error')
+const DatabaseError = require('../Errors/database.error')
+
 // User Registration
 
-async function register(userDto) {
+async function register(userDto: UserDto): Promise<any> {
     try {
-        const { username, password } = userDto;
+        const {username, password} = userDto;
 
         // Check if the username already exists
-        const existingUser = await User.findOne({ username });
+        const existingUser = await User.findOne({username});
         if (existingUser) {
             return new RegistrationError('Username already exists');
         }
@@ -34,12 +37,12 @@ async function register(userDto) {
 
 // User Login
 
-async function login(userDto){
+async function login(userDto: UserDto): Promise<any> {
     try {
-        const { username, password } = userDto;
+        const {username, password} = userDto;
 
         // Check if the user exists
-        const user = await User.findOne({ username });
+        const user = await User.findOne({username});
         if (!user) {
             return new AuthenticationError('Invalid username or password')
         }
@@ -56,7 +59,7 @@ async function login(userDto){
         return {statusCode: 200, message: 'User successfully authenticated', token };
     } catch (error) {
         console.error(error);
-        return new DatabaseError(error.message);
+        return new DatabaseError(error);
     }
 }
 module.exports = {register,login};

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "dist",
+    "lib": [
+      "es5",
+      "es6"
+    ],
+    "experimentalDecorators": true
+  },
+  "include": [
+    "src"
+  ]
+}
