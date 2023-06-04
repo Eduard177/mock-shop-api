@@ -1,0 +1,23 @@
+{
+  "name": "mock-shop-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mongodb": "^5.6.0",
+    "mongoose": "^7.2.2",
+    "swagger-ui-express": "^4.6.3"
+  },
+  "devDependencies": {
+    "dotenv": "^16.1.3"
+  }
+}
