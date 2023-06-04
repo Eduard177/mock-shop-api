@@ -5,3 +5,5 @@ class DatabaseError extends Error {
         this.statusCode = 500;
     }
 }
+
+module.exports = DatabaseError

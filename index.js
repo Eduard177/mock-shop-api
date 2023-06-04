@@ -1,6 +1,7 @@
 const express =require("express");
 const cors = require("cors")
 const swaggerUi = require("swagger-ui-express");
+const routes = require('./routes')
 
 const {connectionDB} = require("./src/database/connetions.database");
 
@@ -8,6 +9,7 @@ const app = express();
 // const swaggerDocument = require("./swagger.json");
 
 app.use(express.json());
+app.use('/api',routes);
 
 app.use(express.urlencoded({ extended: true }));
 

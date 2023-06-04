@@ -2,9 +2,9 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/user.model');
-
-const router = express.Router();
-
+const RegistrationError = require('../Errors/registration.error')
+const DatabaseError = require('../Errors/database.error')
+const AuthenticationError = require('../Errors/authentication.error')
 // User Registration
 
 async function register(userDto) {
@@ -53,10 +53,10 @@ async function login(userDto){
 
         // Create and return a JWT token
         const token = jwt.sign({ userId: user._id }, 'your-secret-key');
-        return { token };
+        return {statusCode: 200, message: 'User successfully authenticated', token };
     } catch (error) {
         console.error(error);
         return new DatabaseError(error.message);
     }
 }
-module.exports = router;
+module.exports = {register,login};
