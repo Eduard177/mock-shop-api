@@ -7,6 +7,8 @@ const User = require('../model/user.model');
 const RegistrationError = require('../Errors/registration.error')
 const AuthenticationError = require('../Errors/authentication.error')
 const DatabaseError = require('../Errors/database.error')
+const {ConfigService} = require('../../../config')
+const configService = new ConfigService()
 
 // User Registration
 
@@ -56,7 +58,16 @@ async function login(userDto: UserDto): Promise<any> {
 
         // Create and return a JWT token
         const token = jwt.sign({ userId: user._id }, 'your-secret-key');
-        return {statusCode: 200, message: 'User successfully authenticated', token };
+        return {
+            statusCode: 200,
+            message: 'User successfully authenticated',
+            token,
+            user: {
+                _id: user._id,
+                username: user.username,
+                orders: user.orders
+            }
+        };
     } catch (error) {
         console.error(error);
         return new DatabaseError(error);

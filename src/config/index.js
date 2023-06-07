@@ -16,6 +16,7 @@ class ConfigService {
             this.envConfig = dotenv.parse(fs.readFileSync(envFilePath));
         } else {
             this.envConfig = {
+                PORT: process.env.PORT,
                 MONGO_URI: process.env.MONGO_URI,
                 SWAGGER_HOST: process.env.SWAGGER_HOST
             };

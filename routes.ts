@@ -4,10 +4,12 @@ const {login, register} = require('./src/modules/user/controller/user.controller
 const {
     getAllProduct,
     getOrderById,
-    createOrder,
+    createOrUpdate,
     getAllOrderByUserId,
     updateOrder,
-    getProductById
+    getProductById,
+    getAllActiveOrder,
+    changeAllActiveOrdersToCompleted
 } = require('./src/modules/order/controller/order.controller');
 // User Registration
 router.post('/register', async (req: any, res: any) => {
@@ -51,9 +53,12 @@ router.get('/product/:productId', async (req: any, res: any) => {
         res.status(e.statusCode).json({message: e.message})
     }
 })
+
+
+// TODO: add JWT authentication for orders
 router.post('/order', async (req: any, res: any) => {
     try {
-        const response = await createOrder(req.body)
+        const response = await createOrUpdate(req.body)
         res.status(response.statusCode).json({message: response.message})
     } catch (e: any) {
         console.log(e)
@@ -61,9 +66,9 @@ router.post('/order', async (req: any, res: any) => {
     }
 });
 
-router.patch('/order/', async (req: any, res: any) => {
+router.patch('/order/complete/:userId', async (req: any, res: any) => {
     try {
-        const response = await updateOrder(req.body)
+        const response = await changeAllActiveOrdersToCompleted(req.params.userId)
         res.status(response.statusCode).json({message: response.message})
     } catch (e: any) {
         console.log(e)
@@ -81,9 +86,19 @@ router.get('/order/:orderId', async (req: any, res: any) => {
     }
 })
 
-router.get('/order/user/:userId', async (req: any, res: any) => {
+router.get('/order/all/user/:userId', async (req: any, res: any) => {
     try {
         const response = await getAllOrderByUserId(req.params.userId);
+        res.status(response.statusCode).json({data: response.data})
+    } catch (e: any) {
+        console.log(e)
+        res.status(e.statusCode).json({message: e.message})
+    }
+})
+
+router.get('/order/user/:userId', async (req: any, res: any) => {
+    try {
+        const response = await getAllActiveOrder(req.params.userId);
         res.status(response.statusCode).json({data: response.data})
     } catch (e: any) {
         console.log(e)

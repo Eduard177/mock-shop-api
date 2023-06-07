@@ -1,12 +1,15 @@
 import {UpdateOrderDto} from "../dto/update_order.dto";
 import {CreateOrderDto} from "../dto/create_order.dto";
-
 const axios = require("axios");
 const BadRequestError = require('../Errors/bad_request.error')
+const NotFoundError = require('../Errors/not_found.error')
 const Order = require('../model/order.model')
+const User = require('../../user/model/user.model');
 const DatabaseError = require("../../user/Errors/database.error");
 const {OrderStatus} = require("../utils/enum/order_status.enum");
 const CallApiError = require("../Errors/call_api.error")
+
+
 
 async function getAllProduct(): Promise<any> {
     try {
@@ -33,6 +36,12 @@ async function getProductById(id: number): Promise<any> {
 async function createOrder(createOrderDto: CreateOrderDto): Promise<any> {
     try {
         const {productList, date, status, user} = createOrderDto;
+
+        const foundedUser = await User.findById(user);
+        if (!foundedUser) {
+            return new NotFoundError('Invalid username or password')
+        }
+
         let subTotal: number = 0;
         if (!productList) {
             return new BadRequestError('productList cannot be null');
@@ -59,13 +68,26 @@ async function createOrder(createOrderDto: CreateOrderDto): Promise<any> {
 async function getAllOrderByUserId(user: string): Promise<any> {
     try {
         const orders = await Order.find({user})
-        return {data: orders, statusCode: 200}
+        return {data: orders[0], statusCode: 200}
 
     } catch (error) {
         console.error(error);
         return new DatabaseError('Internal Server Error');
     }
 }
+
+async function getAllActiveOrder(user: string): Promise<any> {
+    try {
+        const orders = await Order.find({user, status: OrderStatus.ACTIVE})
+        return {data: orders[0], statusCode: 200}
+
+    } catch (error) {
+        console.error(error);
+        return new DatabaseError('Internal Server Error');
+    }
+}
+
+
 
 async function getOrderById(orderId: string): Promise<any> {
     try {
@@ -77,13 +99,42 @@ async function getOrderById(orderId: string): Promise<any> {
     }
 }
 
+async function changeAllActiveOrdersToCompleted(user) {
+    try {
+        // Find all active orders by the user
+        const activeOrders = await Order.find({ user, status: OrderStatus.ACTIVE });
+
+        // Update each active order to completed
+        const updatePromises = activeOrders.map(async (order) => {
+            order.status = OrderStatus.COMPLETED;
+            return order.save();
+        });
+
+        // Wait for all the updates to complete
+        await Promise.all(updatePromises);
+
+        return { message: 'All active orders changed to completed', statusCode: 200 };
+    } catch (error) {
+        console.error(error);
+        return { message: 'Internal Server Error', statusCode: 500 };
+    }
+}
+
+
 async function updateOrder(updateOrderDto: UpdateOrderDto): Promise<any> {
     try {
-        const {productList, date, status, user, orderId} = updateOrderDto;
-        if (status === OrderStatus.COMPLETED) {
-            return {message: 'This Order is Completed, cannot updated', statusCode: 403}
+        const {productList, orderId} = updateOrderDto;
+        // if (status === OrderStatus.COMPLETED) {
+        //     return {message: 'This Order is Completed, cannot updated', statusCode: 403}
+        // }
+
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return new NotFoundError('order not found')
         }
-        let subTotal: number = 0;
+        let subTotal: number = order.subTotal;
+        productList.push(order.productList);
 
         for (const productListElement of productList) {
             let product = await getProductById(productListElement.id);
@@ -92,9 +143,8 @@ async function updateOrder(updateOrderDto: UpdateOrderDto): Promise<any> {
         let interest: number = subTotal * 0.15;
         let totalValue: number = subTotal + interest;
 
-        const order = await getOrderById(orderId);
-        const updateOrder = new Order({productList, subTotal, interest, totalValue, date, status, user});
-        await order.data.updateOne({_id: orderId}, {updateOrder});
+        const updateOrder = new Order({productList, subTotal, interest, totalValue});
+        await order.updateOne({_id: orderId}, {updateOrder});
 
         return {message: 'Order updated', statusCode: 200}
     } catch (error) {
@@ -103,11 +153,59 @@ async function updateOrder(updateOrderDto: UpdateOrderDto): Promise<any> {
     }
 }
 
+
+// async function updateOrder(updateOrderDto: UpdateOrderDto): Promise<any> {
+//     try {
+//         const {productList, orderId} = updateOrderDto;
+//         // if (status === OrderStatus.COMPLETED) {
+//         //     return {message: 'This Order is Completed, cannot updated', statusCode: 403}
+//         // }
+//
+//         const order = await Order.findById(orderId);
+//
+//         if (!order) {
+//             return new NotFoundError('order not found')
+//         }
+//         let subTotal: number = order.subTotal;
+//
+//         for (const productListElement of productList) {
+//             let product = await getProductById(productListElement.id);
+//
+//             order.productList.push(product);
+//             subTotal += product.data.price;
+//         }
+//         let interest: number = subTotal * 0.15;
+//         let totalValue: number = subTotal + interest;
+//
+//         order.subTotal = subTotal;
+//         order.interest = interest;
+//         order.totalValue = totalValue;
+//
+//         await order.save();
+//         return {message: 'Order updated', statusCode: 200}
+//     } catch (error) {
+//         console.error(error);
+//         return new DatabaseError('Internal Server Error');
+//     }
+// }
+
+async function createOrUpdate(createOrderDto: CreateOrderDto | UpdateOrderDto): Promise<any>  {
+    const order = await getAllActiveOrder(createOrderDto.user);
+
+    if (!order?.data) {
+        return await createOrder(createOrderDto);
+    }
+
+    return await updateOrder(<UpdateOrderDto>createOrderDto);
+}
+
 module.exports = {
     getAllProduct,
     getOrderById,
-    createOrder,
+    getAllActiveOrder,
     getAllOrderByUserId,
     updateOrder,
-    getProductById
+    getProductById,
+    createOrUpdate,
+    changeAllActiveOrdersToCompleted
 }
